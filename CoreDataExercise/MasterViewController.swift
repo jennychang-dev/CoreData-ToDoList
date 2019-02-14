@@ -5,14 +5,17 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     var detailViewController: DetailViewController? = nil
     var managedObjectContext: NSManagedObjectContext? = nil
-
-
+    
+    private let itemKey = "MyItem"
+    private var appDelegate: AppDelegate? = nil
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
         navigationItem.leftBarButtonItem = editButtonItem
 
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(insertNewObject(_:)))
+        let addButton = UIBarButtonItem(barButtonSystemItem: .compose, target: self, action: #selector(insertNewObject(_:)))
+
+        
         navigationItem.rightBarButtonItem = addButton
         if let split = splitViewController {
             let controllers = split.viewControllers
@@ -24,15 +27,24 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         clearsSelectionOnViewWillAppear = splitViewController!.isCollapsed
         super.viewWillAppear(animated)
     }
+    
+    @objc
+    func sortList(_ sender: Any) {
+        print("attempting to sort list")
+    }
 
     @objc
     func insertNewObject(_ sender: Any) {
-
         
+      
         // add alert controller
         let alertController = UIAlertController(title: "Add entry", message: "", preferredStyle: .alert)
         alertController.addTextField() { textField in
-                textField.placeholder = "Title"
+            
+            if let standard = UserDefaults.standard.value(forKey: self.itemKey) as? String {
+                textField.placeholder = standard
+            }
+            
         }
         alertController.addTextField() { textField in
                 textField.placeholder = "More information"
@@ -68,8 +80,10 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         present(alertController, animated: true)
         
     }
+
     
     func saveToDoList(answer: String, detail: String, priorityLevel: Int) {
+        
         let context = self.fetchedResultsController.managedObjectContext
         let newToDo = ToDo(context: context)
         newToDo.title = answer
@@ -84,6 +98,9 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             let nserror = error as NSError
             fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
         }
+        
+        UserDefaults.standard.setValue(answer, forKey: itemKey)
+        
         
     }
 
@@ -157,7 +174,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         fetchRequest.fetchBatchSize = 20
         
         // Edit the sort key as appropriate.
-        let sortDescriptor = NSSortDescriptor(key: "title", ascending: false)
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
         
         fetchRequest.sortDescriptors = [sortDescriptor]
         
